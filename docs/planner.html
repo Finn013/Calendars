@@ -1,0 +1,1800 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no"
+  />
+  <title>Планер</title>
+  <style>
+    :root {
+      --bg: #f4f6fb;
+      --surface: #ffffff;
+      --surface-2: #eef2f8;
+      --text: #1e2430;
+      --muted: #697386;
+      --border: #d8deea;
+      --primary: #4f7cff;
+      --primary-strong: #345fe0;
+      --danger: #e05353;
+      --success: #2e9d67;
+      --warning: #f0a43a;
+      --weekend: #fff1f1;
+      --today-ring: #ff6b6b;
+      --shadow: 0 8px 24px rgba(28, 39, 60, 0.08);
+      --radius: 16px;
+      --radius-sm: 12px;
+      --header-h: 64px;
+      --bottom-nav-h: 74px;
+      --tap: 46px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #11151d;
+        --surface: #1a202c;
+        --surface-2: #242c3a;
+        --text: #edf2f7;
+        --muted: #9aa6b8;
+        --border: #313c4d;
+        --primary: #7297ff;
+        --primary-strong: #8babff;
+        --danger: #ff7b7b;
+        --success: #46c287;
+        --warning: #ffbe5c;
+        --weekend: #2a1f24;
+        --today-ring: #ff7b7b;
+        --shadow: 0 10px 28px rgba(0, 0, 0, 0.32);
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      min-height: 100dvh;
+    }
+
+    button, input, select, textarea {
+      font: inherit;
+    }
+
+    button {
+      border: none;
+      cursor: pointer;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      border-radius: 12px;
+      min-height: 46px;
+      padding: 10px 12px;
+      outline: none;
+      font-size: 16px;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(79, 124, 255, 0.15);
+    }
+
+    .app {
+      max-width: 720px;
+      margin: 0 auto;
+      min-height: 100vh;
+      min-height: 100dvh;
+      padding-bottom: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom) + 16px);
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      background: color-mix(in srgb, var(--bg) 90%, transparent);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .topbar-inner {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: var(--header-h);
+      padding: 10px 14px;
+    }
+
+    .nav-btn,
+    .icon-btn,
+    .seg-btn,
+    .primary-btn,
+    .ghost-btn,
+    .danger-btn,
+    .small-btn {
+      min-height: var(--tap);
+      border-radius: 12px;
+      transition: 0.18s ease;
+    }
+
+    .nav-btn, .icon-btn, .ghost-btn, .small-btn {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .nav-btn:active,
+    .icon-btn:active,
+    .seg-btn:active,
+    .primary-btn:active,
+    .ghost-btn:active,
+    .small-btn:active {
+      transform: scale(0.98);
+    }
+
+    .nav-btn, .icon-btn {
+      width: 46px;
+      flex: 0 0 46px;
+      font-size: 18px;
+    }
+
+    .topbar-center {
+      flex: 1;
+      min-width: 0;
+      text-align: center;
+    }
+
+    .topbar-title {
+      font-size: 17px;
+      font-weight: 700;
+      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .topbar-subtitle {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .content {
+      padding: 14px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .section {
+      padding: 14px;
+    }
+
+    .section-title {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .section-subtitle {
+      margin: 4px 0 0;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .stat-box {
+      padding: 12px;
+      border-radius: 14px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .stat-value {
+      font-size: 18px;
+      font-weight: 800;
+    }
+
+    .segmented {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .seg-btn {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 0 8px;
+    }
+
+    .seg-btn.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    .toolbar-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .primary-btn {
+      background: var(--primary);
+      color: white;
+      padding: 0 14px;
+      font-weight: 700;
+    }
+
+    .primary-btn:hover {
+      background: var(--primary-strong);
+    }
+
+    .ghost-btn {
+      padding: 0 14px;
+      font-weight: 600;
+    }
+
+    .danger-btn {
+      background: var(--danger);
+      color: white;
+      padding: 0 14px;
+      font-weight: 700;
+    }
+
+    .small-btn {
+      min-height: 38px;
+      padding: 0 12px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .calendar-grid.month {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 6px;
+    }
+
+    .weekday-chip {
+      font-size: 12px;
+      text-align: center;
+      color: var(--muted);
+      padding: 6px 0;
+      font-weight: 700;
+    }
+
+    .weekday-chip.weekend {
+      color: var(--danger);
+    }
+
+    .day-cell {
+      min-height: 64px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--surface);
+      padding: 8px 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      justify-content: space-between;
+      position: relative;
+    }
+
+    .day-cell.empty {
+      visibility: hidden;
+    }
+
+    .day-cell.weekend {
+      background: var(--weekend);
+    }
+
+    .day-cell.today {
+      box-shadow: inset 0 0 0 2px var(--today-ring);
+    }
+
+    .day-cell.selected {
+      box-shadow: inset 0 0 0 2px var(--primary);
+    }
+
+    .day-number {
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .day-meta {
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.2;
+    }
+
+    .day-dot-row {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: var(--border);
+    }
+
+    .dot.tasks {
+      background: var(--primary);
+    }
+
+    .dot.time {
+      background: var(--success);
+    }
+
+    .dot.shopping {
+      background: var(--warning);
+    }
+
+    .week-list,
+    .year-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .week-card,
+    .month-mini-card {
+      border: 1px solid var(--border);
+      background: var(--surface);
+      border-radius: 16px;
+      padding: 12px;
+    }
+
+    .week-card.weekend {
+      background: var(--weekend);
+    }
+
+    .week-card.today {
+      box-shadow: inset 0 0 0 2px var(--today-ring);
+    }
+
+    .week-card-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .week-card-title {
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .week-card-time {
+      font-size: 12px;
+      color: var(--success);
+      font-weight: 700;
+    }
+
+    .mini-task-list {
+      display: grid;
+      gap: 6px;
+    }
+
+    .mini-task {
+      font-size: 13px;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .year-list {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .month-mini-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 3px;
+      margin-top: 8px;
+    }
+
+    .month-mini-day {
+      aspect-ratio: 1 / 1;
+      border-radius: 8px;
+      font-size: 10px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+    }
+
+    .month-mini-day.weekend {
+      color: var(--danger);
+    }
+
+    .month-mini-day.today {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+
+    .task-stack {
+      display: grid;
+      gap: 10px;
+    }
+
+    .task-row {
+      display: grid;
+      grid-template-columns: 28px 1fr auto;
+      gap: 8px;
+      align-items: center;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 8px;
+    }
+
+    .task-row.compact {
+      grid-template-columns: 28px 1fr;
+    }
+
+    .check {
+      width: 22px;
+      height: 22px;
+      margin: 0 auto;
+      accent-color: var(--primary);
+    }
+
+    .task-input {
+      min-height: 44px;
+      border-radius: 10px;
+      padding: 8px 10px;
+    }
+
+    .task-input.completed {
+      text-decoration: line-through;
+      color: var(--muted);
+      opacity: 0.75;
+    }
+
+    .delete-btn {
+      width: 40px;
+      min-height: 40px;
+      border-radius: 10px;
+      background: transparent;
+      color: var(--danger);
+      border: 1px solid color-mix(in srgb, var(--danger) 30%, var(--border));
+      font-size: 18px;
+    }
+
+    .add-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .collapse-head {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      background: transparent;
+      color: var(--text);
+      padding: 0;
+      border: none;
+      text-align: left;
+    }
+
+    .collapse-head-left {
+      min-width: 0;
+    }
+
+    .collapse-chevron {
+      font-size: 18px;
+      color: var(--muted);
+    }
+
+    .collapse-body {
+      margin-top: 12px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .time-editor {
+      display: grid;
+      gap: 10px;
+    }
+
+    .time-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .inline-label {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    .helper {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .empty-state {
+      color: var(--muted);
+      font-size: 14px;
+      text-align: center;
+      padding: 12px 8px;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.35);
+      display: none;
+      z-index: 80;
+    }
+
+    .modal {
+      position: fixed;
+      left: 50%;
+      bottom: 16px;
+      transform: translateX(-50%);
+      width: calc(100% - 20px);
+      max-width: 520px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      box-shadow: var(--shadow);
+      padding: 14px;
+      z-index: 90;
+      display: none;
+    }
+
+    .modal-title {
+      margin: 0 0 10px;
+      font-size: 16px;
+      font-weight: 800;
+    }
+
+    .bottom-nav {
+      position: fixed;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: 0;
+      width: min(720px, 100%);
+      z-index: 40;
+      padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
+      background: color-mix(in srgb, var(--bg) 92%, transparent);
+      backdrop-filter: blur(10px);
+      border-top: 1px solid var(--border);
+    }
+
+    .bottom-nav-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .bottom-tab {
+      min-height: 52px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      border-radius: 14px;
+      font-size: 12px;
+      font-weight: 700;
+      display: grid;
+      place-items: center;
+      gap: 2px;
+      padding: 6px;
+    }
+
+    .bottom-tab.active {
+      color: white;
+      background: var(--primary);
+      border-color: var(--primary);
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .spacer-8 { height: 8px; }
+    .spacer-12 { height: 12px; }
+
+    @media (max-width: 380px) {
+      .segmented {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .stats-row,
+      .time-grid,
+      .year-list {
+        grid-template-columns: 1fr;
+      }
+
+      .day-cell {
+        min-height: 58px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="topbar-inner">
+        <button class="nav-btn" id="prev-btn" aria-label="Назад">‹</button>
+
+        <div class="topbar-center">
+          <div class="topbar-title" id="topbar-title">Планер</div>
+          <div class="topbar-subtitle" id="topbar-subtitle">...</div>
+        </div>
+
+        <button class="nav-btn" id="next-btn" aria-label="Вперёд">›</button>
+        <button class="icon-btn" id="menu-btn" aria-label="Меню">☰</button>
+      </div>
+    </header>
+
+    <main class="content">
+      <section class="card section">
+        <div class="stats-row">
+          <div class="stat-box">
+            <div class="stat-label">Часы за месяц</div>
+            <div class="stat-value" id="month-hours">0 ч 0 мин</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">Задач на дату</div>
+            <div class="stat-value" id="day-task-count">0</div>
+          </div>
+        </div>
+
+        <div class="spacer-12"></div>
+
+        <div class="segmented" id="view-switch"></div>
+      </section>
+
+      <section class="card section" id="calendar-section"></section>
+
+      <section class="card section" id="day-section"></section>
+
+      <section class="card section">
+        <button class="collapse-head" id="long-toggle">
+          <div class="collapse-head-left">
+            <h3 class="section-title">Долгосрочные задачи</h3>
+            <p class="section-subtitle">Важное, что не привязано к одной дате</p>
+          </div>
+          <div class="collapse-chevron" id="long-chevron">▾</div>
+        </button>
+        <div class="collapse-body" id="long-body"></div>
+      </section>
+
+      <section class="card section">
+        <button class="collapse-head" id="shopping-toggle">
+          <div class="collapse-head-left">
+            <h3 class="section-title">Покупки</h3>
+            <p class="section-subtitle">Список покупок и мелочей</p>
+          </div>
+          <div class="collapse-chevron" id="shopping-chevron">▾</div>
+        </button>
+        <div class="collapse-body" id="shopping-body"></div>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal-backdrop" id="modal-backdrop"></div>
+
+  <div class="modal" id="menu-modal">
+    <h3 class="modal-title">Меню</h3>
+    <div class="toolbar-row">
+      <button class="primary-btn" id="today-btn">Сегодня</button>
+      <button class="ghost-btn" id="export-btn">Экспорт JSON</button>
+      <label class="ghost-btn" style="display:flex;align-items:center;justify-content:center;">
+        Импорт JSON
+        <input id="import-input" type="file" accept=".json,application/json" class="hidden" />
+      </label>
+    </div>
+    <div class="spacer-12"></div>
+    <div class="helper">
+      Все данные хранятся локально в браузере. Экспорт создаёт резервную копию JSON.
+    </div>
+    <div class="spacer-12"></div>
+    <button class="ghost-btn" id="close-menu-btn" style="width:100%;">Закрыть</button>
+  </div>
+
+  <nav class="bottom-nav">
+    <div class="bottom-nav-grid" id="bottom-nav"></div>
+  </nav>
+
+  <script>
+    const STORAGE_KEY = 'planner_single_file_v2';
+
+    const VIEWS = [
+      { key: 'day', label: 'День', icon: '🗓' },
+      { key: 'week', label: 'Неделя', icon: '📚' },
+      { key: 'month', label: 'Месяц', icon: '📅' },
+      { key: 'year', label: 'Год', icon: '🗂' }
+    ];
+
+    const WEEKDAY_SHORT = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+
+    function createDefaultState() {
+      return {
+        version: 2,
+        currentView: 'day',
+        selectedDate: new Date().toISOString(),
+        ui: {
+          longCollapsed: false,
+          shoppingCollapsed: false
+        },
+        tasksByDate: {},
+        longTasks: [],
+        shoppingTasks: []
+      };
+    }
+
+    let state = loadState();
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return createDefaultState();
+
+        const parsed = JSON.parse(raw);
+        return migrateState(parsed);
+      } catch (err) {
+        return createDefaultState();
+      }
+    }
+
+    function migrateState(oldState) {
+      const base = createDefaultState();
+      const next = { ...base, ...oldState };
+
+      // Миграция старой структуры
+      if (!next.tasksByDate && oldState.tasks) {
+        next.tasksByDate = oldState.tasks;
+      }
+
+      if (!next.longTasks && oldState.longTasks) {
+        next.longTasks = oldState.longTasks;
+      }
+
+      if (!next.shoppingTasks) {
+        if (Array.isArray(oldState.shoppingTasks)) {
+          next.shoppingTasks = oldState.shoppingTasks;
+        } else if (Array.isArray(oldState.shopping)) {
+          next.shoppingTasks = oldState.shopping;
+        } else {
+          next.shoppingTasks = [];
+        }
+      }
+
+      if (!next.ui) {
+        next.ui = { longCollapsed: false, shoppingCollapsed: false };
+      }
+
+      // Нормализация задач по дате
+      const normalizedTasksByDate = {};
+      for (const [dateKey, dayData] of Object.entries(next.tasksByDate || {})) {
+        const tasks = Array.isArray(dayData?.tasks) ? dayData.tasks : [];
+        normalizedTasksByDate[dateKey] = {
+          tasks: tasks.map(task => normalizeTask(task)),
+          workMinutes: normalizeWorkMinutes(dayData)
+        };
+      }
+      next.tasksByDate = normalizedTasksByDate;
+
+      next.longTasks = (next.longTasks || []).map(normalizeTask);
+      next.shoppingTasks = (next.shoppingTasks || []).map(normalizeTask);
+
+      if (!VIEWS.some(v => v.key === next.currentView)) {
+        next.currentView = 'day';
+      }
+
+      if (!next.selectedDate || Number.isNaN(new Date(next.selectedDate).getTime())) {
+        next.selectedDate = new Date().toISOString();
+      }
+
+      next.version = 2;
+      return next;
+    }
+
+    function normalizeTask(task) {
+      if (typeof task === 'string') {
+        return {
+          id: uid(),
+          text: task,
+          completed: false,
+          createdAt: Date.now()
+        };
+      }
+
+      return {
+        id: task?.id || uid(),
+        text: task?.text || '',
+        completed: Boolean(task?.completed),
+        createdAt: task?.createdAt || Date.now()
+      };
+    }
+
+    function normalizeWorkMinutes(dayData) {
+      if (typeof dayData?.workMinutes === 'number') return Math.max(0, dayData.workMinutes);
+
+      if (dayData?.manualTime) {
+        const h = parseInt(dayData.manualTime.h || 0, 10) || 0;
+        const m = parseInt(dayData.manualTime.m || 0, 10) || 0;
+        return Math.max(0, h * 60 + m);
+      }
+
+      return 0;
+    }
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function uid() {
+      return 'id-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
+    }
+
+    function getSelectedDate() {
+      return new Date(state.selectedDate);
+    }
+
+    function setSelectedDate(date) {
+      state.selectedDate = new Date(date).toISOString();
+      saveState();
+    }
+
+    function getDateKey(date) {
+      const d = new Date(date);
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    function parseDateKey(dateKey) {
+      const [year, month, day] = dateKey.split('-').map(Number);
+      return new Date(year, month - 1, day);
+    }
+
+    function formatDate(date, mode = 'full') {
+      const d = new Date(date);
+      const formats = {
+        full: { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' },
+        short: { day: '2-digit', month: '2-digit', year: 'numeric' },
+        monthYear: { month: 'long', year: 'numeric' },
+        dayMonth: { day: 'numeric', month: 'long' },
+        weekdayDay: { weekday: 'short', day: 'numeric', month: 'short' },
+        weekdayShort: { weekday: 'short' },
+        yearOnly: { year: 'numeric' }
+      };
+      return new Intl.DateTimeFormat('ru-RU', formats[mode]).format(d);
+    }
+
+    function getMonthName(monthIndex) {
+      return new Intl.DateTimeFormat('ru-RU', { month: 'long' }).format(new Date(2026, monthIndex, 1));
+    }
+
+    function isSameDay(a, b) {
+      return getDateKey(a) === getDateKey(b);
+    }
+
+    function isWeekend(date) {
+      const day = new Date(date).getDay();
+      return day === 0 || day === 6;
+    }
+
+    function getWeekdayIndexMondayFirst(date) {
+      const day = new Date(date).getDay();
+      return day === 0 ? 6 : day - 1;
+    }
+
+    function getStartOfWeek(date) {
+      const d = new Date(date);
+      const idx = getWeekdayIndexMondayFirst(d);
+      d.setHours(0, 0, 0, 0);
+      d.setDate(d.getDate() - idx);
+      return d;
+    }
+
+    function addDays(date, count) {
+      const d = new Date(date);
+      d.setDate(d.getDate() + count);
+      return d;
+    }
+
+    function addMonths(date, count) {
+      const d = new Date(date);
+      d.setMonth(d.getMonth() + count);
+      return d;
+    }
+
+    function addYears(date, count) {
+      const d = new Date(date);
+      d.setFullYear(d.getFullYear() + count);
+      return d;
+    }
+
+    function getDayData(date) {
+      const key = getDateKey(date);
+      if (!state.tasksByDate[key]) {
+        state.tasksByDate[key] = {
+          tasks: [],
+          workMinutes: 0
+        };
+      }
+      return state.tasksByDate[key];
+    }
+
+    function getTasksForDate(date) {
+      return getDayData(date).tasks;
+    }
+
+    function getWorkMinutesForDate(date) {
+      return getDayData(date).workMinutes || 0;
+    }
+
+    function setWorkMinutesForDate(date, minutes) {
+      getDayData(date).workMinutes = Math.max(0, Number(minutes) || 0);
+      saveState();
+    }
+
+    function addTaskToDate(date, text = '') {
+      getDayData(date).tasks.push({
+        id: uid(),
+        text,
+        completed: false,
+        createdAt: Date.now()
+      });
+      saveState();
+      render();
+    }
+
+    function updateTaskInDate(date, taskId, patch) {
+      const tasks = getTasksForDate(date);
+      const task = tasks.find(t => t.id === taskId);
+      if (!task) return;
+      Object.assign(task, patch);
+      saveState();
+    }
+
+    function deleteTaskFromDate(date, taskId) {
+      const dayData = getDayData(date);
+      dayData.tasks = dayData.tasks.filter(t => t.id !== taskId);
+      saveState();
+      render();
+    }
+
+    function addGenericTask(listName, text = '') {
+      state[listName].push({
+        id: uid(),
+        text,
+        completed: false,
+        createdAt: Date.now()
+      });
+      saveState();
+      render();
+    }
+
+    function updateGenericTask(listName, taskId, patch) {
+      const task = state[listName].find(t => t.id === taskId);
+      if (!task) return;
+      Object.assign(task, patch);
+      saveState();
+    }
+
+    function deleteGenericTask(listName, taskId) {
+      state[listName] = state[listName].filter(t => t.id !== taskId);
+      saveState();
+      render();
+    }
+
+    function sortTasks(tasks) {
+      return [...tasks].sort((a, b) => {
+        if (a.completed !== b.completed) return a.completed ? 1 : -1;
+        return (a.createdAt || 0) - (b.createdAt || 0);
+      });
+    }
+
+    function formatMinutes(totalMinutes) {
+      const minutes = Math.max(0, totalMinutes || 0);
+      const h = Math.floor(minutes / 60);
+      const m = minutes % 60;
+      return `${h} ч ${m} мин`;
+    }
+
+    function calculateMonthMinutes(date) {
+      const d = new Date(date);
+      const year = d.getFullYear();
+      const month = d.getMonth();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+      let total = 0;
+      for (let day = 1; day <= daysInMonth; day++) {
+        total += getWorkMinutesForDate(new Date(year, month, day));
+      }
+      return total;
+    }
+
+    function countTasksForDate(date) {
+      return getTasksForDate(date).length;
+    }
+
+    function openMenu() {
+      document.getElementById('modal-backdrop').style.display = 'block';
+      document.getElementById('menu-modal').style.display = 'block';
+    }
+
+    function closeMenu() {
+      document.getElementById('modal-backdrop').style.display = 'none';
+      document.getElementById('menu-modal').style.display = 'none';
+    }
+
+    function exportState() {
+      const payload = JSON.stringify(state, null, 2);
+      const blob = new Blob([payload], { type: 'application/json' });
+      const link = document.createElement('a');
+      const now = new Date();
+      const filename = `planner_backup_${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}-${String(now.getMinutes()).padStart(2,'0')}.json`;
+      link.href = URL.createObjectURL(blob);
+      link.download = filename;
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+    }
+
+    function importStateFromFile(file) {
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        try {
+          const parsed = JSON.parse(e.target.result);
+          state = migrateState(parsed);
+          saveState();
+          render();
+          closeMenu();
+        } catch (err) {
+          alert('Не удалось импортировать JSON');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function navigate(direction) {
+      const current = getSelectedDate();
+
+      if (state.currentView === 'day') {
+        setSelectedDate(addDays(current, direction));
+      } else if (state.currentView === 'week') {
+        setSelectedDate(addDays(current, direction * 7));
+      } else if (state.currentView === 'month') {
+        setSelectedDate(addMonths(current, direction));
+      } else if (state.currentView === 'year') {
+        setSelectedDate(addYears(current, direction));
+      }
+
+      render();
+    }
+
+    function goToToday() {
+      setSelectedDate(new Date());
+      render();
+      closeMenu();
+    }
+
+    function setView(viewKey) {
+      state.currentView = viewKey;
+      saveState();
+      render();
+    }
+
+    function renderViewSwitch() {
+      const switchEl = document.getElementById('view-switch');
+      const bottomNav = document.getElementById('bottom-nav');
+
+      switchEl.innerHTML = '';
+      bottomNav.innerHTML = '';
+
+      VIEWS.forEach(view => {
+        const btn = document.createElement('button');
+        btn.className = 'seg-btn' + (state.currentView === view.key ? ' active' : '');
+        btn.textContent = view.label;
+        btn.onclick = () => setView(view.key);
+        switchEl.appendChild(btn);
+
+        const tab = document.createElement('button');
+        tab.className = 'bottom-tab' + (state.currentView === view.key ? ' active' : '');
+        tab.innerHTML = `<div>${view.icon}</div><div>${view.label}</div>`;
+        tab.onclick = () => setView(view.key);
+        bottomNav.appendChild(tab);
+      });
+    }
+
+    function renderTopbar() {
+      const date = getSelectedDate();
+      const titleEl = document.getElementById('topbar-title');
+      const subtitleEl = document.getElementById('topbar-subtitle');
+
+      if (state.currentView === 'day') {
+        titleEl.textContent = formatDate(date, 'dayMonth');
+        subtitleEl.textContent = formatDate(date, 'full');
+      } else if (state.currentView === 'week') {
+        const start = getStartOfWeek(date);
+        const end = addDays(start, 6);
+        titleEl.textContent = 'Неделя';
+        subtitleEl.textContent = `${formatDate(start, 'dayMonth')} — ${formatDate(end, 'dayMonth')}`;
+      } else if (state.currentView === 'month') {
+        titleEl.textContent = formatDate(date, 'monthYear');
+        subtitleEl.textContent = 'Обзор месяца';
+      } else {
+        titleEl.textContent = formatDate(date, 'yearOnly');
+        subtitleEl.textContent = 'Годовой обзор';
+      }
+
+      document.getElementById('month-hours').textContent = formatMinutes(calculateMonthMinutes(date));
+      document.getElementById('day-task-count').textContent = String(countTasksForDate(date));
+    }
+
+    function renderCalendarSection() {
+      const root = document.getElementById('calendar-section');
+      root.innerHTML = '';
+
+      if (state.currentView === 'day') {
+        root.appendChild(renderDayMiniNavigator());
+      } else if (state.currentView === 'week') {
+        root.appendChild(renderWeekView());
+      } else if (state.currentView === 'month') {
+        root.appendChild(renderMonthView());
+      } else if (state.currentView === 'year') {
+        root.appendChild(renderYearView());
+      }
+    }
+
+    function renderDayMiniNavigator() {
+      const wrap = document.createElement('div');
+
+      const h3 = document.createElement('h3');
+      h3.className = 'section-title';
+      h3.textContent = 'Выбранная дата';
+      wrap.appendChild(h3);
+
+      const p = document.createElement('p');
+      p.className = 'section-subtitle';
+      p.textContent = 'Основной режим для телефона — день';
+      wrap.appendChild(p);
+
+      const actions = document.createElement('div');
+      actions.className = 'toolbar-row';
+      actions.style.marginTop = '12px';
+
+      const todayBtn = document.createElement('button');
+      todayBtn.className = 'ghost-btn';
+      todayBtn.textContent = 'Сегодня';
+      todayBtn.onclick = goToToday;
+
+      const monthBtn = document.createElement('button');
+      monthBtn.className = 'ghost-btn';
+      monthBtn.textContent = 'Открыть месяц';
+      monthBtn.onclick = () => setView('month');
+
+      actions.append(todayBtn, monthBtn);
+      wrap.appendChild(actions);
+
+      return wrap;
+    }
+
+    function renderMonthView() {
+      const selected = getSelectedDate();
+      const year = selected.getFullYear();
+      const month = selected.getMonth();
+
+      const wrapper = document.createElement('div');
+
+      const title = document.createElement('h3');
+      title.className = 'section-title';
+      title.textContent = formatDate(selected, 'monthYear');
+      wrapper.appendChild(title);
+
+      const subtitle = document.createElement('p');
+      subtitle.className = 'section-subtitle';
+      subtitle.textContent = 'Нажми на день, чтобы открыть список задач';
+      wrapper.appendChild(subtitle);
+
+      const grid = document.createElement('div');
+      grid.className = 'calendar-grid month';
+      grid.style.marginTop = '12px';
+
+      WEEKDAY_SHORT.forEach((day, idx) => {
+        const item = document.createElement('div');
+        item.className = 'weekday-chip' + (idx >= 5 ? ' weekend' : '');
+        item.textContent = day;
+        grid.appendChild(item);
+      });
+
+      const firstDay = new Date(year, month, 1);
+      const startOffset = getWeekdayIndexMondayFirst(firstDay);
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+      for (let i = 0; i < startOffset; i++) {
+        const empty = document.createElement('div');
+        empty.className = 'day-cell empty';
+        grid.appendChild(empty);
+      }
+
+      for (let day = 1; day <= daysInMonth; day++) {
+        const date = new Date(year, month, day);
+        const dayData = getDayData(date);
+        const cell = document.createElement('button');
+        cell.className = 'day-cell';
+
+        if (isWeekend(date)) cell.classList.add('weekend');
+        if (isSameDay(date, new Date())) cell.classList.add('today');
+        if (isSameDay(date, selected)) cell.classList.add('selected');
+
+        const dayNumber = document.createElement('div');
+        dayNumber.className = 'day-number';
+        dayNumber.textContent = String(day);
+
+        const meta = document.createElement('div');
+        meta.className = 'day-meta';
+        meta.textContent = dayData.workMinutes > 0
+          ? formatMinutes(dayData.workMinutes)
+          : 'Без часов';
+
+        const dots = document.createElement('div');
+        dots.className = 'day-dot-row';
+        if (dayData.tasks.length) {
+          const dot = document.createElement('div');
+          dot.className = 'dot tasks';
+          dots.appendChild(dot);
+        }
+        if (dayData.workMinutes > 0) {
+          const dot = document.createElement('div');
+          dot.className = 'dot time';
+          dots.appendChild(dot);
+        }
+
+        cell.append(dayNumber, meta, dots);
+        cell.onclick = () => {
+          setSelectedDate(date);
+          setView('day');
+        };
+
+        grid.appendChild(cell);
+      }
+
+      wrapper.appendChild(grid);
+      return wrapper;
+    }
+
+    function renderWeekView() {
+      const selected = getSelectedDate();
+      const start = getStartOfWeek(selected);
+
+      const wrapper = document.createElement('div');
+
+      const title = document.createElement('h3');
+      title.className = 'section-title';
+      title.textContent = 'Неделя';
+      wrapper.appendChild(title);
+
+      const subtitle = document.createElement('p');
+      subtitle.className = 'section-subtitle';
+      subtitle.textContent = 'Вертикальные карточки вместо тесных колонок';
+      wrapper.appendChild(subtitle);
+
+      const list = document.createElement('div');
+      list.className = 'week-list';
+      list.style.marginTop = '12px';
+
+      for (let i = 0; i < 7; i++) {
+        const date = addDays(start, i);
+        const tasks = getTasksForDate(date);
+        const minutes = getWorkMinutesForDate(date);
+
+        const card = document.createElement('button');
+        card.className = 'week-card';
+        if (isWeekend(date)) card.classList.add('weekend');
+        if (isSameDay(date, new Date())) card.classList.add('today');
+
+        const head = document.createElement('div');
+        head.className = 'week-card-head';
+
+        const title = document.createElement('div');
+        title.className = 'week-card-title';
+        title.textContent = `${capitalize(formatDate(date, 'weekdayShort'))} · ${formatDate(date, 'dayMonth')}`;
+
+        const time = document.createElement('div');
+        time.className = 'week-card-time';
+        time.textContent = minutes > 0 ? formatMinutes(minutes) : '0 ч 0 мин';
+
+        head.append(title, time);
+
+        const taskList = document.createElement('div');
+        taskList.className = 'mini-task-list';
+
+        if (!tasks.length) {
+          const empty = document.createElement('div');
+          empty.className = 'mini-task muted';
+          empty.textContent = 'Нет задач';
+          taskList.appendChild(empty);
+        } else {
+          tasks.slice(0, 3).forEach(task => {
+            const row = document.createElement('div');
+            row.className = 'mini-task';
+            row.textContent = (task.completed ? '✓ ' : '• ') + (task.text || 'Без названия');
+            taskList.appendChild(row);
+          });
+          if (tasks.length > 3) {
+            const more = document.createElement('div');
+            more.className = 'mini-task muted';
+            more.textContent = `Ещё: ${tasks.length - 3}`;
+            taskList.appendChild(more);
+          }
+        }
+
+        card.append(head, taskList);
+        card.onclick = () => {
+          setSelectedDate(date);
+          setView('day');
+        };
+
+        list.appendChild(card);
+      }
+
+      wrapper.appendChild(list);
+      return wrapper;
+    }
+
+    function renderYearView() {
+      const selected = getSelectedDate();
+      const year = selected.getFullYear();
+
+      const wrapper = document.createElement('div');
+
+      const title = document.createElement('h3');
+      title.className = 'section-title';
+      title.textContent = `Год ${year}`;
+      wrapper.appendChild(title);
+
+      const subtitle = document.createElement('p');
+      subtitle.className = 'section-subtitle';
+      subtitle.textContent = 'Компактный обзор для долгого планирования';
+      wrapper.appendChild(subtitle);
+
+      const list = document.createElement('div');
+      list.className = 'year-list';
+      list.style.marginTop = '12px';
+
+      for (let month = 0; month < 12; month++) {
+        const card = document.createElement('button');
+        card.className = 'month-mini-card';
+
+        const monthTitle = document.createElement('div');
+        monthTitle.className = 'week-card-title';
+        monthTitle.textContent = capitalize(getMonthName(month));
+
+        const monthHours = document.createElement('div');
+        monthHours.className = 'section-subtitle';
+        monthHours.style.marginTop = '4px';
+        monthHours.textContent = `Часы: ${formatMinutes(calculateMonthMinutes(new Date(year, month, 1)))}`;
+
+        const miniGrid = document.createElement('div');
+        miniGrid.className = 'month-mini-grid';
+
+        const first = new Date(year, month, 1);
+        const offset = getWeekdayIndexMondayFirst(first);
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+        for (let i = 0; i < offset; i++) {
+          const empty = document.createElement('div');
+          miniGrid.appendChild(empty);
+        }
+
+        for (let d = 1; d <= daysInMonth; d++) {
+          const date = new Date(year, month, d);
+          const cell = document.createElement('div');
+          cell.className = 'month-mini-day';
+          if (isWeekend(date)) cell.classList.add('weekend');
+          if (isSameDay(date, new Date())) cell.classList.add('today');
+          cell.textContent = d;
+          miniGrid.appendChild(cell);
+        }
+
+        card.append(monthTitle, monthHours, miniGrid);
+        card.onclick = () => {
+          setSelectedDate(new Date(year, month, 1));
+          setView('month');
+        };
+
+        list.appendChild(card);
+      }
+
+      wrapper.appendChild(list);
+      return wrapper;
+    }
+
+    function renderDaySection() {
+      const root = document.getElementById('day-section');
+      root.innerHTML = '';
+
+      const selected = getSelectedDate();
+
+      const title = document.createElement('h3');
+      title.className = 'section-title';
+      title.textContent = 'Задачи на день';
+      root.appendChild(title);
+
+      const subtitle = document.createElement('p');
+      subtitle.className = 'section-subtitle';
+      subtitle.textContent = formatDate(selected, 'full');
+      root.appendChild(subtitle);
+
+      root.appendChild(renderDayTasks(selected));
+
+      const divider = document.createElement('div');
+      divider.className = 'spacer-12';
+      root.appendChild(divider);
+
+      root.appendChild(renderTimeEditor(selected));
+    }
+
+    function renderDayTasks(date) {
+      const wrap = document.createElement('div');
+      wrap.style.marginTop = '12px';
+
+      const tasks = sortTasks(getTasksForDate(date));
+
+      const list = document.createElement('div');
+      list.className = 'task-stack';
+
+      if (!tasks.length) {
+        const empty = document.createElement('div');
+        empty.className = 'empty-state';
+        empty.textContent = 'Задач на этот день пока нет';
+        list.appendChild(empty);
+      } else {
+        tasks.forEach(task => {
+          list.appendChild(createTaskRow({
+            task,
+            onToggle: checked => {
+              updateTaskInDate(date, task.id, { completed: checked });
+              render();
+            },
+            onInput: value => {
+              updateTaskInDate(date, task.id, { text: value });
+            },
+            onDelete: () => {
+              deleteTaskFromDate(date, task.id);
+            }
+          }));
+        });
+      }
+
+      wrap.appendChild(list);
+
+      const addRow = document.createElement('div');
+      addRow.className = 'add-row';
+
+      const input = document.createElement('input');
+      input.placeholder = 'Новая задача';
+      input.className = 'task-input';
+
+      const btn = document.createElement('button');
+      btn.className = 'primary-btn';
+      btn.textContent = 'Добавить';
+
+      const submit = () => {
+        const text = input.value.trim();
+        if (!text) return;
+        addTaskToDate(date, text);
+        input.value = '';
+      };
+
+      btn.onclick = submit;
+      input.addEventListener('keydown', e => {
+        if (e.key === 'Enter') submit();
+      });
+
+      addRow.append(input, btn);
+      wrap.appendChild(addRow);
+
+      return wrap;
+    }
+
+    function createTaskRow({ task, onToggle, onInput, onDelete }) {
+      const row = document.createElement('div');
+      row.className = 'task-row';
+      if (task.completed) row.classList.add('completed');
+
+      const check = document.createElement('input');
+      check.type = 'checkbox';
+      check.className = 'check';
+      check.checked = task.completed;
+      check.onchange = () => onToggle(check.checked);
+
+      const input = document.createElement('input');
+      input.className = 'task-input' + (task.completed ? ' completed' : '');
+      input.value = task.text || '';
+      input.placeholder = 'Текст задачи';
+      input.oninput = debounce(value => onInput(value), 250);
+      input.addEventListener('input', e => input.oninput(e.target.value));
+
+      const del = document.createElement('button');
+      del.className = 'delete-btn';
+      del.textContent = '🗑';
+      del.title = 'Удалить';
+      del.onclick = onDelete;
+
+      row.append(check, input, del);
+      return row;
+    }
+
+    function renderTimeEditor(date) {
+      const wrap = document.createElement('div');
+      wrap.className = 'time-editor';
+
+      const title = document.createElement('h3');
+      title.className = 'section-title';
+      title.textContent = 'Учёт рабочих часов';
+      wrap.appendChild(title);
+
+      const sub = document.createElement('p');
+      sub.className = 'section-subtitle';
+      sub.textContent = 'Просто вручную внеси часы за день — они пойдут в общий итог месяца';
+      wrap.appendChild(sub);
+
+      const currentMinutes = getWorkMinutesForDate(date);
+      const currentHours = Math.floor(currentMinutes / 60);
+      const currentMins = currentMinutes % 60;
+
+      const grid = document.createElement('div');
+      grid.className = 'time-grid';
+
+      const hoursBox = document.createElement('div');
+      const hoursLabel = document.createElement('label');
+      hoursLabel.className = 'inline-label';
+      hoursLabel.textContent = 'Часы';
+      const hoursInput = document.createElement('input');
+      hoursInput.type = 'number';
+      hoursInput.min = '0';
+      hoursInput.max = '23';
+      hoursInput.value = String(currentHours);
+      hoursBox.append(hoursLabel, hoursInput);
+
+      const minsBox = document.createElement('div');
+      const minsLabel = document.createElement('label');
+      minsLabel.className = 'inline-label';
+      minsLabel.textContent = 'Минуты';
+      const minsInput = document.createElement('input');
+      minsInput.type = 'number';
+      minsInput.min = '0';
+      minsInput.max = '59';
+      minsInput.value = String(currentMins);
+      minsBox.append(minsLabel, minsInput);
+
+      grid.append(hoursBox, minsBox);
+      wrap.appendChild(grid);
+
+      const row = document.createElement('div');
+      row.className = 'toolbar-row';
+
+      const saveBtn = document.createElement('button');
+      saveBtn.className = 'primary-btn';
+      saveBtn.textContent = 'Сохранить часы';
+      saveBtn.onclick = () => {
+        const h = clampInt(hoursInput.value, 0, 23);
+        const m = clampInt(minsInput.value, 0, 59);
+        setWorkMinutesForDate(date, h * 60 + m);
+        render();
+      };
+
+      const clearBtn = document.createElement('button');
+      clearBtn.className = 'ghost-btn';
+      clearBtn.textContent = 'Сбросить';
+      clearBtn.onclick = () => {
+        setWorkMinutesForDate(date, 0);
+        render();
+      };
+
+      row.append(saveBtn, clearBtn);
+      wrap.appendChild(row);
+
+      const helper = document.createElement('div');
+      helper.className = 'helper';
+      helper.textContent = `Сейчас записано: ${formatMinutes(currentMinutes)}. За текущий месяц: ${formatMinutes(calculateMonthMinutes(getSelectedDate()))}.`;
+      wrap.appendChild(helper);
+
+      return wrap;
+    }
+
+    function renderCollapsibleLists() {
+      renderTaskListSection({
+        bodyId: 'long-body',
+        chevronId: 'long-chevron',
+        collapsed: state.ui.longCollapsed,
+        listName: 'longTasks',
+        placeholder: 'Новая долгосрочная задача'
+      });
+
+      renderTaskListSection({
+        bodyId: 'shopping-body',
+        chevronId: 'shopping-chevron',
+        collapsed: state.ui.shoppingCollapsed,
+        listName: 'shoppingTasks',
+        placeholder: 'Новая покупка'
+      });
+    }
+
+    function renderTaskListSection({ bodyId, chevronId, collapsed, listName, placeholder }) {
+      const body = document.getElementById(bodyId);
+      const chevron = document.getElementById(chevronId);
+
+      chevron.textContent = collapsed ? '▸' : '▾';
+      body.classList.toggle('hidden', collapsed);
+      body.innerHTML = '';
+
+      if (collapsed) return;
+
+      const tasks = sortTasks(state[listName]);
+
+      const stack = document.createElement('div');
+      stack.className = 'task-stack';
+
+      if (!tasks.length) {
+        const empty = document.createElement('div');
+        empty.className = 'empty-state';
+        empty.textContent = 'Пока пусто';
+        stack.appendChild(empty);
+      } else {
+        tasks.forEach(task => {
+          const row = createTaskRow({
+            task,
+            onToggle: checked => {
+              updateGenericTask(listName, task.id, { completed: checked });
+              render();
+            },
+            onInput: value => {
+              updateGenericTask(listName, task.id, { text: value });
+            },
+            onDelete: () => {
+              deleteGenericTask(listName, task.id);
+            }
+          });
+          stack.appendChild(row);
+        });
+      }
+
+      body.appendChild(stack);
+
+      const addRow = document.createElement('div');
+      addRow.className = 'add-row';
+
+      const input = document.createElement('input');
+      input.placeholder = placeholder;
+      input.className = 'task-input';
+
+      const btn = document.createElement('button');
+      btn.className = 'primary-btn';
+      btn.textContent = 'Добавить';
+
+      const submit = () => {
+        const text = input.value.trim();
+        if (!text) return;
+        addGenericTask(listName, text);
+        input.value = '';
+      };
+
+      btn.onclick = submit;
+      input.addEventListener('keydown', e => {
+        if (e.key === 'Enter') submit();
+      });
+
+      addRow.append(input, btn);
+      body.appendChild(addRow);
+    }
+
+    function bindStaticEvents() {
+      document.getElementById('prev-btn').onclick = () => navigate(-1);
+      document.getElementById('next-btn').onclick = () => navigate(1);
+      document.getElementById('menu-btn').onclick = openMenu;
+      document.getElementById('close-menu-btn').onclick = closeMenu;
+      document.getElementById('modal-backdrop').onclick = closeMenu;
+
+      document.getElementById('today-btn').onclick = goToToday;
+      document.getElementById('export-btn').onclick = exportState;
+      document.getElementById('import-input').addEventListener('change', e => {
+        importStateFromFile(e.target.files[0]);
+        e.target.value = '';
+      });
+
+      document.getElementById('long-toggle').onclick = () => {
+        state.ui.longCollapsed = !state.ui.longCollapsed;
+        saveState();
+        renderCollapsibleLists();
+      };
+
+      document.getElementById('shopping-toggle').onclick = () => {
+        state.ui.shoppingCollapsed = !state.ui.shoppingCollapsed;
+        saveState();
+        renderCollapsibleLists();
+      };
+    }
+
+    function render() {
+      renderTopbar();
+      renderViewSwitch();
+      renderCalendarSection();
+      renderDaySection();
+      renderCollapsibleLists();
+    }
+
+    function debounce(fn, delay = 250) {
+      let timer = null;
+      return function (...args) {
+        clearTimeout(timer);
+        timer = setTimeout(() => fn(...args), delay);
+      };
+    }
+
+    function clampInt(value, min, max) {
+      const num = parseInt(value, 10);
+      if (Number.isNaN(num)) return min;
+      return Math.max(min, Math.min(max, num));
+    }
+
+    function capitalize(text) {
+      if (!text) return '';
+      return text.charAt(0).toUpperCase() + text.slice(1);
+    }
+
+    bindStaticEvents();
+    saveState();
+    render();
+  </script>
+</body>
+</html>
